@@ -53,14 +53,14 @@ messaggi = [
             #'token': random.getrandbits(128),
             'destinatario': 'Laura',
             'messaggio': 'ciao',
-            'messaggio_consegnato': True
+            #'messaggio_consegnato': True
             },
             {
             'mittente': 'Paolo',
             #'token': random.getrandbits(128),
             'destinatario': 'Franca',
             'messaggio': 'come stai',
-            'messaggio_consegnato': True
+            #'messaggio_consegnato': True
             
             }
             ]
@@ -90,23 +90,23 @@ def Registration():
         lista_utenti = update_lista_utenti(utenti_registrati)
 
         if request.args['username'] not in lista_utenti:
-nuovo_utente['username']=request.args['username']
-nuovo_utente['password']=int(request.args['password'])
-#nuovo_utente['token']=str(random.getrandbits(128))
-# nuovo_utente['token']=56643
+            nuovo_utente['username']=request.args['username']
+            nuovo_utente['password']=int(request.args['password'])
+            #nuovo_utente['token']=str(random.getrandbits(128))
+            # nuovo_utente['token']=56643
 
-utenti_registrati.append(nuovo_utente)
+            utenti_registrati.append(nuovo_utente)
     
-    print('utente registrato correttamente')
+            print('utente registrato correttamente')
     
-        return jsonify(utenti_registrati)
+            return jsonify(utenti_registrati)
             
             
-            elif request.args['username'] in lista_utenti:
+        elif request.args['username'] in lista_utenti:
 
-print('nome utente già in uso')
+            print('nome utente già in uso')
 
-return ('''<h2> ERROR: nome utente già in uso</h2>''')
+            return ('''<h2> ERROR: nome utente già in uso</h2>''')
 
 @app.route('/api/v1/resources/autenticazione',methods=['POST'])
 def Authentication():
@@ -124,24 +124,24 @@ def Authentication():
                         tk['data']= time.time()
                         return ('''<h2>IL TOKEN SCADUTO E' STATO AGGIORNATO: AUTENTICAZIONE RIUSCITA </h2>''')
             
-                elif missing_token(request.args['username']):
+            elif missing_token(request.args['username']):
                     nuovo_token={}
                         
-                        nuovo_token['username']=request.args['username']
-                        nuovo_token['token']= secrets.token_hex(16)
-                        nuovo_token['data']=time.time()
+                    nuovo_token['username']=request.args['username']
+                    nuovo_token['token']= secrets.token_hex(16)
+                    nuovo_token['data']=time.time()
                         
-                        token.append(nuovo_token)
+                    token.append(nuovo_token)
                         
-                        return ('''<h2> IL TOKEN E' STATO CREATO PER LA PRIMA VOLTA: ASSEGNAZIONE TOKEN RIUSCITA </h2>''')
+                    return ('''<h2> IL TOKEN E' STATO CREATO PER LA PRIMA VOLTA: ASSEGNAZIONE TOKEN RIUSCITA </h2>''')
                                 
-                else:
+            else:
                         return ('''<h2> L'UTENTE HA ANCORA IL TOKEN VALIDO </h2>''')
                                 
-        else:
+         else:
                         return ('''<h2> PASSWORD ERRATA </h2>''')
         
-    else:
+     else:
                                     
                         return ('''<h2>L'UTENTE NON E' REGISTRATO</h2>''')
 
@@ -162,9 +162,9 @@ def send():
         
         return ''' <h1>Sessione scaduta, effetuare autenticazione<h1> '''
 
-else :
+    else :
     
-    nuovo_messaggio = {}
+        nuovo_messaggio = {}
         
         #salvataggio messaggio database messaggi
         
@@ -174,31 +174,45 @@ else :
         
         nuovo_messaggio['messaggio'] = request.args['messaggio']
         
-        nuovo_messaggio['data'] = request.args['timestamp']
+        #nuovo_messaggio['data'] = request.args['timestamp']
+        
+        nuovo_messaggio['data'] = time.time()
         
         nuovo_messaggio['messaggio_consegnato'] = False
         
         
         messaggi.append(nuovo_messaggio)
         
-            return 'messaggio inviato con successo: {}'.format(nuovo_messaggio['messaggio'])
+        return 'messaggio inviato con successo: {}'.format(nuovo_messaggio['messaggio'])
 
 @app.route('/api/v1/resources/ricevi', methods=['GET'])
 def receive():
+    
     lista_utenti = update_lista_utenti(utenti_registrati)
+    
     if token_scaduto(request.args['username']):
+        
         return ''' <h1>Sessione scaduta, effetuare autenticazione</h1> '''
+    
     else: #sessione valida
         
         messaggi_ricevuti = []
+        
         for messaggio in messaggi:
+            
             if request.args['username'] == messaggio['destinatario'] and messaggio['messaggio_consegnato'] == False:
+                
                 messaggi_ricevuti.append(messaggio)
+                
                 messaggio['messaggio_consegnato'] = True
+    
         if messaggi_ricevuti == []:
+            
             return ''' <h1> Non ci sono nuovi messaggi </h1>'''
+        
         else:
-            return messaggi_ricevuti
+            
+            return jsonify( messaggi_ricevuti)
 
 
 
