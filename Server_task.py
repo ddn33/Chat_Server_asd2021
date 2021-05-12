@@ -32,7 +32,7 @@ def token_scaduto(user):
                 
                 
                 return False
-return False
+    return False
 
 def missing_token(user):
     for tk in token:
@@ -40,9 +40,15 @@ def missing_token(user):
             return False
     return True
 
-
-
-
+def token_errato(user,token):
+    for tk in token:
+        if tk['username'] == user:
+            if token == tk['token']:
+                return False
+    return True
+    
+           
+    
 
 
 app = flask.Flask(__name__)
@@ -83,32 +89,32 @@ token = [
          }
          ]
 
-@app.route('/api/v1/resources/registrazione',methods=['POST'])
+@app.route('/api/v1/resources/registration',methods=['POST'])
 def Registration():
-    nuovo_utente= {}
-        
+        nuovo_utente = {}
+   
         lista_utenti = update_lista_utenti(utenti_registrati)
 
         if request.args['username'] not in lista_utenti:
             nuovo_utente['username']=request.args['username']
             nuovo_utente['password']=int(request.args['password'])
-            #nuovo_utente['token']=str(random.getrandbits(128))
-            # nuovo_utente['token']=56643
-
+            
             utenti_registrati.append(nuovo_utente)
-    
-            print('utente registrato correttamente')
-    
-            return jsonify(utenti_registrati)
             
+            message = {'message': 'utente registrato correttamente'}
+            #nuovo_utente['token']=str(random.getrandbits(128))
+            #nuovo_utente['token']=56643
             
+            # print('utente registrato correttamente')
+            response = {**nuovo_utente,**message}
+            return jsonify(response)
+           
+           
         elif request.args['username'] in lista_utenti:
-
-            print('nome utente già in uso')
-
+            # print('nome utente già in uso')
             return ('''<h2> ERROR: nome utente già in uso</h2>''')
 
-@app.route('/api/v1/resources/autenticazione',methods=['POST'])
+@app.route('/api/v1/resources/authentication',methods=['POST'])
 def Authentication():
     
     lista_utenti = update_lista_utenti(utenti_registrati)
@@ -116,33 +122,37 @@ def Authentication():
     if request.args['username'] in lista_utenti.keys():
         
         if int(request.args['password'])== lista_utenti[request.args['username']]:
-            if token_scaduto(request.args['username']):
-                for tk in token:
-                    if tk['username'] == request.args['username']:
-                        tk['username'] = request.args['username']
-                        tk['token']= secrets.token_hex(16)
-                        tk['data']= time.time()
-                        return ('''<h2>IL TOKEN SCADUTO E' STATO AGGIORNATO: AUTENTICAZIONE RIUSCITA </h2>''')
             
-            elif missing_token(request.args['username']):
-                    nuovo_token={}
+                if token_scaduto(request.args['username']):
+                    for tk in token:
+                        if tk['username'] == request.args['username']:
+                            # tk['username'] = request.args['username'] ridondante, è già assegnato il nome
+                            tk['token']= secrets.token_hex(16)
+                            tk['data']= time.time()
+                            message = {'message': '''IL TOKEN SCADUTO E' STATO AGGIORNATO, AUTENTICAZIONE RIUSCITA'''}
+                            response = {**tk,**message}
+                            return jsonify(response)
+                
+                elif missing_token(request.args['username']):
+                        nuovo_token={}
+                            
+                        nuovo_token['username']=request.args['username']
+                        nuovo_token['token']= secrets.token_hex(16)
+                        nuovo_token['data']=time.time()
+                            
+                        token.append(nuovo_token)
                         
-                    nuovo_token['username']=request.args['username']
-                    nuovo_token['token']= secrets.token_hex(16)
-                    nuovo_token['data']=time.time()
-                        
-                    token.append(nuovo_token)
-                        
-                    return ('''<h2> IL TOKEN E' STATO CREATO PER LA PRIMA VOLTA: ASSEGNAZIONE TOKEN RIUSCITA </h2>''')
-                                
-            else:
+                        message = {'message' : '''IL TOKEN E' STATO CREATO PER LA PRIMA VOLTA: ASSEGNAZIONE TOKEN RIUSCITA'''}
+                        response = {**nuovo_token,**message}    
+                        return jsonify(response)
+                                    
+                else:
                         return ('''<h2> L'UTENTE HA ANCORA IL TOKEN VALIDO </h2>''')
-                                
-         else:
+                                    
+        else:
                         return ('''<h2> PASSWORD ERRATA </h2>''')
         
-     else:
-                                    
+    else:                               
                         return ('''<h2>L'UTENTE NON E' REGISTRATO</h2>''')
 
 
@@ -156,11 +166,15 @@ def send():
     
     if request.args['destinatario'] not in lista_utenti.keys():
         
-        return ''' <h1> Il Destinatario non esiste <h1>'''
+        return ''' <h1> Il Destinatario non esiste </h1>'''
 
     elif token_scaduto(request.args['username']):
         
-        return ''' <h1>Sessione scaduta, effetuare autenticazione<h1> '''
+        return ''' <h1>Sessione scaduta, effetuare autenticazione</h1> '''
+    
+    elif token_errato(request.args['username'],request.args['token']):
+        
+        return '''<h1>il token inserito non è valido</h1>'''
 
     else :
     
@@ -188,11 +202,15 @@ def send():
 @app.route('/api/v1/resources/ricevi', methods=['GET'])
 def receive():
     
-    lista_utenti = update_lista_utenti(utenti_registrati)
+    #lista_utenti = update_lista_utenti(utenti_registrati)
     
     if token_scaduto(request.args['username']):
         
         return ''' <h1>Sessione scaduta, effetuare autenticazione</h1> '''
+    
+    elif token_errato(request.args['username'], request.args['token']):
+        
+        return ''' <h1>il token inserito non è valido</h1> '''
     
     else: #sessione valida
         
