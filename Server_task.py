@@ -111,10 +111,15 @@ def Registration():
            
            
         elif request.args['username'] in lista_utenti:
-            # print('nome utente già in uso')
-            return ('''<h2> ERROR: nome utente già in uso</h2>''')
 
-@app.route('/api/v1/resources/authentication',methods=['POST'])
+            message = {'message': 'nome utente già in uso'}
+                
+            response = message
+                    
+            return jsonify(response)
+
+
+@app.route('/api/v1/resources/authentication',methods=['GET'])
 def Authentication():
     
     lista_utenti = update_lista_utenti(utenti_registrati)
@@ -157,15 +162,27 @@ def Authentication():
                             return jsonify(response)
                                     
         else:
-                        return ('''<h2> PASSWORD ERRATA </h2>''')
+            
+                message = {'message' : '''LA PASSWORD E' ERRATA : AUTENTICAZIONE NON RIUSCITA'''}
+                                
+                response = message
+                                    
+                                    
+                return jsonify(response)
+
         
     else:                               
-                        return ('''<h2>L'UTENTE NON E' REGISTRATO</h2>''')
+        
+                message = {'message' : '''L'UTENTE NON E' REGISTRATO : AUTENTICAZIONE NON RIUSCITA'''}
+                            
+                response = message
+                                
+                return jsonify(response)
 
 
 
 
-@app.route('/api/v1/resources/invio', methods=['POST'])
+@app.route('/api/v1/resources/send', methods=['POST'])
 
 def send():
     
@@ -173,15 +190,31 @@ def send():
     
     if request.args['destinatario'] not in lista_utenti.keys():
         
-        return ''' <h1> Il Destinatario non esiste </h1>'''
+        message = {'message' : '''IL DESTINATARIO NON E' REGISTRATO : INVIO MESSAGGIO NON RIUSCITO'''}
+            
+        response = message
+                
+        return jsonify(response)
+
 
     elif token_scaduto(request.args['username']):
-        
-        return ''' <h1>Sessione scaduta, effetuare autenticazione</h1> '''
+
+        message = {'message' : '''LA SESSIONE E'SCADUTA : EFFETTUARE AUTENTICAZIONE PER INVIARE MESSAGGI'''}
+            
+        response = message
+                
+        return jsonify(response)
+
+
     
     elif token_errato(request.args['username'],request.args['token']):
         
-        return '''<h1>il token inserito non è valido</h1>'''
+           message = {'message' : '''IL TOKEN INSERITO NON E' VALIDO : INVIO MESSAGGIO NON RIUSCITO'''}
+    
+           response = message
+        
+           return jsonify(response)
+
 
     else :
     
@@ -204,20 +237,35 @@ def send():
         
         messaggi.append(nuovo_messaggio)
         
-        return 'messaggio inviato con successo: {}'.format(nuovo_messaggio['messaggio'])
+        message = {'message' : '''INVIO DEL MESSAGGIO RIUSCITO'''}
+                
+        response = message
+                    
+        return jsonify(response)
 
-@app.route('/api/v1/resources/ricevi', methods=['GET'])
+
+@app.route('/api/v1/resources/receive', methods=['GET'])
 def receive():
     
     lista_utenti = update_lista_utenti(utenti_registrati)
     
     if token_scaduto(request.args['username']):
         
-        return ''' <h1>Sessione scaduta, effetuare autenticazione</h1> '''
+        message = {'message' : '''SESSIONE SCADUTA : EFFETTUARE AUTENTICAZIONE'''}
+            
+        response = message
+                
+        return jsonify(response)
+
     
     elif token_errato(request.args['username'], request.args['token']):
-        
-        return ''' <h1>il token inserito non è valido</h1> '''
+    
+        message = {'message' : '''IL TOKEN INSERITO E' ERRATO'''}
+            
+        response = message
+                
+        return jsonify(response)
+
     
     else: #sessione valida
         
@@ -234,9 +282,9 @@ def receive():
         if messaggi_ricevuti == []:
             
             
-            messaggio= {'message': ''' <h1> Non ci sono nuovi messaggi </h1>'''}
-            messaggi_ricevuti['messaggio']=messaggi_ricevuti
-            response= {**messaggio, **messaggi_ricevuti}
+            messaggio= {'avviso': '''  NON CI SONO NUOVI MESSAGGI'''}
+            nuovi_messaggi= {'message': ''}
+            response= {**messaggio, **nuovi_messaggi}
             
             return jsonify(response)
         
