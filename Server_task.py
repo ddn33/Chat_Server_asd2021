@@ -40,10 +40,10 @@ def missing_token(user):
             return False
     return True
 
-def token_errato(user,token):
+def token_errato(user,nuovo_token):
     for tk in token:
         if tk['username'] == user:
-            if token == tk['token']:
+            if nuovo_token == tk['token']:
                 return False
     return True
     
@@ -147,7 +147,14 @@ def Authentication():
                         return jsonify(response)
                                     
                 else:
-                        return ('''<h2> L'UTENTE HA ANCORA IL TOKEN VALIDO </h2>''')
+                    
+                    for tk in token:
+                        if request.args['username']==tk['username']:
+                            
+                            message={'message': '''<h2> L'UTENTE HA ANCORA IL TOKEN VALIDO </h2>'''}
+                            response= {**tk,**message}
+                            
+                            return jsonify(response)
                                     
         else:
                         return ('''<h2> PASSWORD ERRATA </h2>''')
@@ -202,7 +209,7 @@ def send():
 @app.route('/api/v1/resources/ricevi', methods=['GET'])
 def receive():
     
-    #lista_utenti = update_lista_utenti(utenti_registrati)
+    lista_utenti = update_lista_utenti(utenti_registrati)
     
     if token_scaduto(request.args['username']):
         
@@ -226,7 +233,12 @@ def receive():
     
         if messaggi_ricevuti == []:
             
-            return ''' <h1> Non ci sono nuovi messaggi </h1>'''
+            
+            messaggio= {'message': ''' <h1> Non ci sono nuovi messaggi </h1>'''}
+            messaggi_ricevuti['messaggio']=messaggi_ricevuti
+            response= {**messaggio, **messaggi_ricevuti}
+            
+            return jsonify(response)
         
         else:
             
