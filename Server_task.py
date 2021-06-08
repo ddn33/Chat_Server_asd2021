@@ -29,7 +29,6 @@ def token_scaduto(user):
 
             if time.time() - user_token['data'] > 1800:
 
-
                 return True
 
             else:
@@ -162,7 +161,7 @@ def Authentication():
                     for tk in token:
                         if request.args['username']==tk['username']:
 
-                            message={'message': '''<h2> L'UTENTE HA ANCORA IL TOKEN VALIDO </h2>'''}
+                            message={'message': '''L'UTENTE HA ANCORA IL TOKEN VALIDO'''}
 
                             response= {**tk,**message}
                             
@@ -200,7 +199,7 @@ def send():
         abort(make_response(jsonify(description="IL DESTINATARIO NON E' REGISTRATO : INVIO MESSAGGIO NON RIUSCITO"),400))
 
 
-    elif token_scaduto(request.args['username']):
+    elif token_scaduto(request.args['mittente']):
 
         #message = {'message' : '''LA SESSIONE E'SCADUTA : EFFETTUARE AUTENTICAZIONE PER INVIARE MESSAGGI'''}
         #response = message
@@ -209,7 +208,7 @@ def send():
         abort(make_response(jsonify(description="LA SESSIONE E' SCADUTA : EFFETTUARE  AUTENTICAZIONE PER INVIARE MESSAGGI"),403))
 
 
-    elif token_errato(request.args['username'],request.args['token']):
+    elif token_errato(request.args['mittente'],request.args['token']):
 
            #message = {'message' : '''IL TOKEN INSERITO NON E' VALIDO : INVIO MESSAGGIO NON RIUSCITO'''}
            #response = message
@@ -223,7 +222,7 @@ def send():
 
         #salvataggio messaggio database messaggi
 
-        nuovo_messaggio['mittente'] = request.args['username']
+        nuovo_messaggio['mittente'] = request.args['mittente']
 
         nuovo_messaggio['destinatario'] = request.args['destinatario']
 
@@ -231,7 +230,7 @@ def send():
 
         #nuovo_messaggio['data'] = request.args['timestamp']
 
-        nuovo_messaggio['data'] = time.time()
+        nuovo_messaggio['data'] = request.args['data']
 
         nuovo_messaggio['messaggio_consegnato'] = False
 
