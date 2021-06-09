@@ -282,14 +282,17 @@ def receive():
 
 
             messaggio= {'avviso': '''  NON CI SONO NUOVI MESSAGGI'''}
-            nuovi_messaggi= {'message': ''}
+            nuovi_messaggi= {'messaggi': ''}
             response= {**messaggio, **nuovi_messaggi}
 
             return jsonify(response)
 
         else:
-
-            return jsonify( messaggi_ricevuti)
+            response = {}
+            message = f'HAI RICEVUTO {len(messaggi_ricevuti)} NUOVI MESSAGGI'
+            response['avviso'] = message
+            response['messaggi'] = messaggi_ricevuti
+            return jsonify(response)
 
 
 
